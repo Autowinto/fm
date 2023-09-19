@@ -1,0 +1,18 @@
+[package]
+name = "production-flow-designer"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.11", features = ["dynamic_linking"] }
+bevy_egui = "0.21"
+bevy-inspector-egui = "0.19"
+
+
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
