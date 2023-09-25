@@ -1,85 +1,73 @@
-use bevy::prelude::*;
-use bevy_egui::{
-    egui::{self, style::default_text_styles},
-    EguiContexts, EguiPlugin,
-};
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use eframe::App;
+use egui::epaint::Shadow;
 
-fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "GTNH Production Planner".into(),
-                ..default()
-            }),
-            ..default()
-        }))
-        .add_plugins(EguiPlugin)
-        // Debug Utils
-        .add_plugins(WorldInspectorPlugin::new())
-        .add_systems(Startup, initialize)
-        .add_systems(Update, ui)
-        .run();
+fn main() -> eframe::Result<()> {
+    let native_options = eframe::NativeOptions {
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "App",
+        native_options,
+        Box::new(|cc| Box::new(MyApp::new(cc))),
+    )
 }
 
-fn initialize(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+struct MyApp {
+    processNodes: Vec<ProcessNode>,
 }
 
-fn ui(commands: Commands, mut ctxs: EguiContexts) {
-    egui::Window::new("Hello").show(ctxs.ctx_mut(), |ui| {
-        ui.label("world");
-        if ui.button("Spawn Process").clicked() {
-            spawn_node(commands)
-        }
-    });
-}
+impl MyApp {
+    fn new(cc: &eframe::CreationContext) -> Self {
+        configure_styles(&cc.egui_ctx);
 
-#[derive(Component)]
-struct ProductionNode {
-    pub title: String,
-}
-
-impl Default for ProductionNode {
-    fn default() -> Self {
         Self {
-            title: "New Process Step".to_string(),
+            processNodes: Vec::new(),
         }
     }
 }
 
-fn spawn_node(mut commands: Commands) {
-    let text_style = TextStyle { ..default() };
-    commands
-        .spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(0.25, 0.25, 0.75),
-                    custom_size: Some(Vec2::new(200.0, 200.0)),
-                    ..default()
-                },
-                transform: Transform::from_translation(Vec2::new(0.0, 0.0).extend(0.0)),
-                ..default()
-            },
-            ProductionNode { ..default() },
-        ))
-        .with_children(|builder| {
-            builder
-                .spawn(SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::rgb(1.0, 0.25, 0.2),
-                        custom_size: Some(Vec2::new(200.0, 20.0)),
-                        ..default()
-                    },
-                    transform: Transform::from_translation(Vec3::new(0.0, 90.0, Vec3::Z.z)),
-                    ..default()
-                })
-                .with_children(|builder| {
-                    builder.spawn(Text2dBundle {
-                        text: Text::from_section("Test", text_style.clone()),
-                        transform: Transform::from_translation(Vec3::Z),
-                        ..default()
-                    });
+fn configure_styles(ctx: &egui::Context) {
+    let mut style: egui::Style = Default::default();
+    style.visuals.window_shadow = Shadow::NONE;
+    style.visuals.resize_corner_size = 0.0;
+
+    ctx.set_style(style);
+}
+
+impl App for MyApp {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::ScrollArea::both().show(ui, |ui| {
+                egui::Window::new("Aooga").show(ctx, |ui| ui.heading("Aooga"));
+                ui.horizontal(|ui| {
+                    egui::Window::new("Title").show(ctx, |ui| ui.heading("Header"));
+                    if ui.add(egui::Button::new("Add")).clicked() {
+                        self.processNodes.push(ProcessNode {
+                            title: "New Title".to_string(),
+                        })
+                    };
                 });
+                // egui::Button::new("Aooga")
+            });
+
+            for (idx, processNode) in self.processNodes.iter().enumerate() {
+                egui::Window::new(processNode.title.to_string())
+                    .id(egui::Id::new(idx))
+                    .title_bar(false)
+                    .show(ui.ctx(), |ui| ui.heading("Header"));
+            }
         });
+    }
+}
+
+#[derive(Default)]
+struct ProcessNode {
+    title: String,
+}
+
+impl ProcessNode {
+    pub fn show(&mut self, ui: &mut eframe::egui::Ui) {
+        egui::Window::new(self.title.as_str()).show(ui.ctx(), |ui| ui.heading("Header"));
+    }
 }

@@ -4,9 +4,8 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.11", features = ["dynamic_linking"] }
-bevy_egui = "0.21"
-bevy-inspector-egui = "0.19"
+egui = "0.22.0"
+eframe = "0.22.0"
 
 
 # Enable a small amount of optimization in debug mode
